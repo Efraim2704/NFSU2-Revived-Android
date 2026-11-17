@@ -12,8 +12,6 @@
 static void (*s_cam_stick_fn)(float, float) = nullptr;
 static void (*s_garage_stick_fn)(float, float) = nullptr;
 static void (*s_roam_stick_fn)(float, float) = nullptr;
-static void (*s_input_log_axes_fn)(int, float, float, float, float, float, float) = nullptr;
-static void (*s_input_log_cam_fn)(const char*, float, float, float, bool) = nullptr;
 static std::mutex s_dispatch_mutex;
 static std::atomic<bool> s_symbols_resolved{false};
 
@@ -36,10 +34,6 @@ static void resolve_camera_symbols() {
             s_cam_stick_fn = reinterpret_cast<void(*)(float, float)>(dlsym(h_core, "nfs_camera_stick_input"));
         if (!s_garage_stick_fn)
             s_garage_stick_fn = reinterpret_cast<void(*)(float, float)>(dlsym(h_core, "nfs_garage_stick_input"));
-        if (!s_input_log_axes_fn)
-            s_input_log_axes_fn = reinterpret_cast<void(*)(int, float, float, float, float, float, float)>(dlsym(h_core, "nfs_input_log_gamepad_axes"));
-        if (!s_input_log_cam_fn)
-            s_input_log_cam_fn = reinterpret_cast<void(*)(const char*, float, float, float, bool)>(dlsym(h_core, "nfs_input_log_camera"));
     }
 
     if (!s_cam_stick_fn)
@@ -119,16 +113,6 @@ void nfs_gamepad_camera_on_motion(const AInputEvent* event) {
     } else {
         chosen_x = std::max(-1.0f, std::min(1.0f, chosen_x));
         chosen_y = std::max(-1.0f, std::min(1.0f, chosen_y));
-    }
-
-    if (s_input_log_axes_fn) {
-        float lx = AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_X, 0);
-        float ly = AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_Y, 0);
-        float lt = std::fmax(AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_LTRIGGER, 0),
-                             AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_BRAKE, 0));
-        float rt = std::fmax(AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_RTRIGGER, 0),
-                             AMotionEvent_getAxisValue(event, AMOTION_EVENT_AXIS_GAS, 0));
-        s_input_log_axes_fn(AInputEvent_getDeviceId(event), lx, ly, chosen_x, chosen_y, lt, rt);
     }
 
     nfs_gamepad_camera_feed(chosen_x, chosen_y);

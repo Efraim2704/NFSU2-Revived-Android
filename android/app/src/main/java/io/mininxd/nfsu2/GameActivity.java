@@ -199,9 +199,6 @@ public final class GameActivity extends NativeActivity {
             seen.append(seen.length()==0?"":"; ").append(device.getName()).append(" [").append(Integer.toHexString(sources))
                     .append(device.isExternal()?" external":" internal").append(pad?" pad":"").append(']');
             if(pad){connected=true;accepted.add(id);}
-            try {
-                nativeInputLogDevice(device.getId(), device.getName(), sources, device.isExternal(), device.toString());
-            } catch (Throwable ignored) {}
         }
         android.util.Log.i("NFS","Input devices: "+seen);
         // Only these devices may move the guest's stick or press its keys.
@@ -373,6 +370,7 @@ public final class GameActivity extends NativeActivity {
         PerformanceCores.bindToPerformanceCores();
         GameLog.init(this);
         io.mininxd.nfsu2.net.NetLog.init(this);
+        InputLog.init(this);
         inputManager=(android.hardware.input.InputManager)getSystemService(INPUT_SERVICE);
         tiltSensors=(android.hardware.SensorManager)getSystemService(SENSOR_SERVICE);
         tiltSensor=tiltSensors==null?null:tiltSensors.getDefaultSensor(android.hardware.Sensor.TYPE_ACCELEROMETER);
@@ -910,12 +908,16 @@ public final class GameActivity extends NativeActivity {
     }
 
     private static native void nativeFeedGamepadStick(float rx, float ry);
-    public static native void nativeInputLogInit(String basePath);
-    public static native void nativeInputLogDevice(int id, String name, int sources, boolean isExternal, String desc);
-    public static native void nativeInputLogTouch(int pointerId, int action, float x, float y, String controlName);
+
+    @Override
+    public boolean dispatchKeyEvent(android.view.KeyEvent event) {
+        InputLog.onKeyEvent(event);
+        return super.dispatchKeyEvent(event);
+    }
 
     @Override
     public boolean onGenericMotionEvent(android.view.MotionEvent event) {
+        InputLog.onGenericMotionEvent(event);
         if ((event.getSource() & android.view.InputDevice.SOURCE_JOYSTICK) == android.view.InputDevice.SOURCE_JOYSTICK
                 && event.getAction() == android.view.MotionEvent.ACTION_MOVE) {
             float rx_z = event.getAxisValue(android.view.MotionEvent.AXIS_Z);
@@ -928,6 +930,7 @@ public final class GameActivity extends NativeActivity {
             if (Math.abs(rx) > 0.15f || Math.abs(ry) > 0.15f) {
                 AdhocRoamClient.handleRightStick(rx, ry);
                 nativeFeedGamepadStick(rx, ry);
+                InputLog.cameraLook("RightStick", rx, ry, 0f, 0f);
             } else {
                 AdhocRoamClient.handleRightStick(0f, 0f);
                 nativeFeedGamepadStick(0f, 0f);

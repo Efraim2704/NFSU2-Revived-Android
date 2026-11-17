@@ -96,7 +96,10 @@ final class Diagnostics {
             if (haltBytes != null && haltBytes.length > 0) {
                 add(zip, "halt_log.txt", haltBytes);
             }
-            byte[] inputBytes = getInputLogBytes(context);
+            byte[] inputBytes = InputLog.getLogBytes(context);
+            if (inputBytes == null || inputBytes.length == 0) {
+                inputBytes = getInputLogBytes(context);
+            }
             if (inputBytes != null && inputBytes.length > 0) {
                 add(zip, "input_log.txt", inputBytes);
             }

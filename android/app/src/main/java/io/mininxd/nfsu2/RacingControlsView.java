@@ -1553,7 +1553,7 @@ final class RacingControlsView extends View {
             float normY = getHeight() > 0 ? (e.getY(index) / getHeight()) : 0f;
             Control c = hit(e.getX(index), e.getY(index));
             String controlName = (c != null) ? ((c.id != null ? c.id : "btn") + (c.icon != null ? ":" + c.icon : "")) : (cameraTouchId == id ? "CameraOrbitDrag" : "ScreenArea");
-            GameActivity.nativeInputLogTouch(id, action, normX, normY, controlName);
+            InputLog.touch(id, action, normX, normY, controlName);
         } catch (Throwable ignored) {}
 
         if (controlsHidden) {
