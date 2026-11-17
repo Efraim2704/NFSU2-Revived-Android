@@ -39,20 +39,23 @@ public:
     }
     template<class SetKey>
     bool motion(const AInputEvent* event,bool driving,SetKey&& setKey){
-        if(!(AInputEvent_getSource(event)&AINPUT_SOURCE_CLASS_JOYSTICK))return false;
+        int32_t src = AInputEvent_getSource(event);
+        if(!(src & (AINPUT_SOURCE_CLASS_JOYSTICK | AINPUT_SOURCE_JOYSTICK | AINPUT_SOURCE_GAMEPAD)))return false;
         auto axis=[&](int32_t which){return AMotionEvent_getAxisValue(event,which,0);};
         stickX_=axis(AMOTION_EVENT_AXIS_X);stickY_=axis(AMOTION_EVENT_AXIS_Y);
         hatX_=axis(AMOTION_EVENT_AXIS_HAT_X);hatY_=axis(AMOTION_EVENT_AXIS_HAT_Y);
         // Android right stick: AXIS_RX/AXIS_RY ("X/Y-Rotation") or AXIS_Z/AXIS_RZ
         float rx_cand = axis(AMOTION_EVENT_AXIS_RX);
-        float z_cand = axis(AMOTION_EVENT_AXIS_Z);
-        if(z_cand < -0.85f) z_cand = 0.f; // resting trigger
-        rightX_ = (std::fabs(rx_cand) >= std::fabs(z_cand)) ? rx_cand : z_cand;
-
         float ry_cand = axis(AMOTION_EVENT_AXIS_RY);
+        float z_cand  = axis(AMOTION_EVENT_AXIS_Z);
         float rz_cand = axis(AMOTION_EVENT_AXIS_RZ);
-        if(rz_cand < -0.85f) rz_cand = 0.f; // resting trigger
-        rightY_ = (std::fabs(ry_cand) >= std::fabs(rz_cand)) ? ry_cand : rz_cand;
+        if(std::fabs(rx_cand) > 0.05f || std::fabs(ry_cand) > 0.05f){
+            rightX_ = rx_cand;
+            rightY_ = ry_cand;
+        }else{
+            rightX_ = z_cand;
+            rightY_ = rz_cand;
+        }
 
         // Pads report triggers as LTRIGGER/RTRIGGER, BRAKE/GAS or fallback to Z/RZ
         float lt = std::fmax(axis(AMOTION_EVENT_AXIS_LTRIGGER), axis(AMOTION_EVENT_AXIS_BRAKE));

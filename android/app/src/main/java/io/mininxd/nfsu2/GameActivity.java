@@ -896,6 +896,8 @@ public final class GameActivity extends NativeActivity {
         }, "NewsRefresher").start();
     }
 
+    private static native void nativeFeedGamepadStick(float rx, float ry);
+
     @Override
     public boolean onGenericMotionEvent(android.view.MotionEvent event) {
         if ((event.getSource() & android.view.InputDevice.SOURCE_JOYSTICK) == android.view.InputDevice.SOURCE_JOYSTICK
@@ -909,8 +911,10 @@ public final class GameActivity extends NativeActivity {
             float ry = Math.abs(ry_rot) >= Math.abs(ry_z) ? ry_rot : ry_z;
             if (Math.abs(rx) > 0.15f || Math.abs(ry) > 0.15f) {
                 AdhocRoamClient.handleRightStick(rx, ry);
+                nativeFeedGamepadStick(rx, ry);
             } else {
                 AdhocRoamClient.handleRightStick(0f, 0f);
+                nativeFeedGamepadStick(0f, 0f);
             }
         }
         return super.onGenericMotionEvent(event);

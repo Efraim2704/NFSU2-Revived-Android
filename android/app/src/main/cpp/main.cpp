@@ -24,6 +24,7 @@
 #include "vulkan_driver.h"
 #include "universal_gpu_loader.h"
 #include "nfs_widescreen.h"
+#include "gamepad_camera.h"
 
 static android_app* s_active_app = nullptr;
 android_app* getActiveAndroidApp() {
@@ -297,6 +298,7 @@ static void publishPad(){
         if(!s_roam_stick) s_roam_stick=reinterpret_cast<void(*)(float,float)>(dlsym(RTLD_DEFAULT,"roam_stick_input"));
     }
     if(s_roam_stick) s_roam_stick(state.rightX, state.rightY);
+    nfs_gamepad_camera_feed(state.rightX, state.rightY);
 }
 static void onCommand(android_app* app, int32_t command) {
     auto& h = *static_cast<Host*>(app->userData);
@@ -323,6 +325,7 @@ static int32_t onInput(android_app*,AInputEvent* event){
     int32_t type=AInputEvent_getType(event);
     gamepad.setKeyEmulation(!guestGamepadInUse());
     if(type==AINPUT_EVENT_TYPE_MOTION){
+        nfs_gamepad_camera_on_motion(event);
         if(!acceptedGamepad(event))return 0;
         bool handled=gamepad.motion(event,guestDrivingControls(),setPadKey);if(handled){notePadUse(event);publishPad();}return handled?1:0;
     }
