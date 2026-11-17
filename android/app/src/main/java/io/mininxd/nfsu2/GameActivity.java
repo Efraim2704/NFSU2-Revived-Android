@@ -199,6 +199,9 @@ public final class GameActivity extends NativeActivity {
             seen.append(seen.length()==0?"":"; ").append(device.getName()).append(" [").append(Integer.toHexString(sources))
                     .append(device.isExternal()?" external":" internal").append(pad?" pad":"").append(']');
             if(pad){connected=true;accepted.add(id);}
+            try {
+                nativeInputLogDevice(device.getId(), device.getName(), sources, device.isExternal(), device.toString());
+            } catch (Throwable ignored) {}
         }
         android.util.Log.i("NFS","Input devices: "+seen);
         // Only these devices may move the guest's stick or press its keys.
@@ -386,6 +389,11 @@ public final class GameActivity extends NativeActivity {
             if (Build.VERSION.SDK_INT >= 30) {
                 getWindow().setDecorFitsSystemWindows(false);
             }
+        } catch (Throwable ignored) {}
+        try {
+            java.io.File ext = getExternalFilesDir(null);
+            String logBase = ext != null ? ext.getAbsolutePath() : getFilesDir().getAbsolutePath();
+            nativeInputLogInit(logBase);
         } catch (Throwable ignored) {}
         applyDisplayRefreshRate();
         Intent launch = getIntent();
@@ -683,7 +691,12 @@ public final class GameActivity extends NativeActivity {
             if(diagnosticOverlay!=null)diagnosticOverlay.hide();
         }
         if(focused){
-            applyDisplayRefreshRate();
+            try {
+            java.io.File ext = getExternalFilesDir(null);
+            String logBase = ext != null ? ext.getAbsolutePath() : getFilesDir().getAbsolutePath();
+            nativeInputLogInit(logBase);
+        } catch (Throwable ignored) {}
+        applyDisplayRefreshRate();
             if(Build.VERSION.SDK_INT>=30){
                 getWindow().setDecorFitsSystemWindows(false);
                 android.view.WindowInsetsController insets=getWindow().getInsetsController();
@@ -897,6 +910,9 @@ public final class GameActivity extends NativeActivity {
     }
 
     private static native void nativeFeedGamepadStick(float rx, float ry);
+    public static native void nativeInputLogInit(String basePath);
+    public static native void nativeInputLogDevice(int id, String name, int sources, boolean isExternal, String desc);
+    public static native void nativeInputLogTouch(int pointerId, int action, float x, float y, String controlName);
 
     @Override
     public boolean onGenericMotionEvent(android.view.MotionEvent event) {

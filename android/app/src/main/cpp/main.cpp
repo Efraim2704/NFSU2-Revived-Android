@@ -352,7 +352,18 @@ static int32_t onInput(android_app*,AInputEvent* event){
     }
     if(!scan)return 0;int action=AKeyEvent_getAction(event);
     if(action!=AKEY_EVENT_ACTION_DOWN&&action!=AKEY_EVENT_ACTION_UP)return 0;
-    setGuestKey(scan,action==AKEY_EVENT_ACTION_DOWN);return 1;
+    bool down = (action == AKEY_EVENT_ACTION_DOWN);
+    setGuestKey(scan, down);
+    static void (*s_log_btn)(int, const char*, bool, unsigned) = nullptr;
+    if (!s_log_btn) {
+        void* h = dlopen("libgame_core.so", RTLD_NOLOAD);
+        if (!h) h = dlopen("libgame_core.so", RTLD_NOW | RTLD_GLOBAL);
+        if (h) s_log_btn = reinterpret_cast<void(*)(int, const char*, bool, unsigned)>(dlsym(h, "nfs_input_log_gamepad_button"));
+    }
+    if (s_log_btn) {
+        s_log_btn(AInputEvent_getDeviceId(event), "Key/PadBtn", down, scan);
+    }
+    return 1;
 }
 extern "C" JNIEXPORT void JNICALL Java_io_mininxd_nfsu2_GameActivity_nativeKey(JNIEnv*,jclass,jint scan,jboolean down){
     setGuestKey(unsigned(scan),down==JNI_TRUE);

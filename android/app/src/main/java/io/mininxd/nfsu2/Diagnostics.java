@@ -96,6 +96,10 @@ final class Diagnostics {
             if (haltBytes != null && haltBytes.length > 0) {
                 add(zip, "halt_log.txt", haltBytes);
             }
+            byte[] inputBytes = getInputLogBytes(context);
+            if (inputBytes != null && inputBytes.length > 0) {
+                add(zip, "input_log.txt", inputBytes);
+            }
             ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
             if (Build.VERSION.SDK_INT >= 30 && manager != null) addExitInfo(zip, manager, context);
         } catch (Exception error) {
@@ -270,5 +274,36 @@ final class Diagnostics {
             }
         } catch (RuntimeException error) { info.append(error); }
         add(zip, "crashes.txt", info.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static byte[] getInputLogBytes(Context ctx) {
+        String[] paths = {
+            "/sdcard/nfsu2/input_log.txt",
+            "/sdcard/NFSU2/input_log.txt",
+            "/storage/emulated/0/nfsu2/input_log.txt",
+            "/storage/emulated/0/NFSU2/input_log.txt"
+        };
+        for (String p : paths) {
+            File f = new File(p);
+            if (f.exists() && f.length() > 0) {
+                try {
+                    return java.nio.file.Files.readAllBytes(f.toPath());
+                } catch (Throwable ignored) {}
+            }
+        }
+        if (ctx != null) {
+            File ext = ctx.getExternalFilesDir(null);
+            if (ext != null) {
+                File f = new File(ext, "input_log.txt");
+                if (f.exists() && f.length() > 0) {
+                    try { return java.nio.file.Files.readAllBytes(f.toPath()); } catch (Throwable ignored) {}
+                }
+            }
+            File f = new File(ctx.getFilesDir(), "input_log.txt");
+            if (f.exists() && f.length() > 0) {
+                try { return java.nio.file.Files.readAllBytes(f.toPath()); } catch (Throwable ignored) {}
+            }
+        }
+        return new byte[0];
     }
 }

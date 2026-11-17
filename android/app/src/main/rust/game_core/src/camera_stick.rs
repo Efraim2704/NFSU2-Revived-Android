@@ -100,6 +100,9 @@ impl CameraStickEngine {
         let iy = (y * 10000.0) as i32;
         self.stick_x.store(ix, Ordering::Release);
         self.stick_y.store(iy, Ordering::Release);
+        if (x * x + y * y).sqrt() > 0.15 {
+            crate::input_logger::GLOBAL_INPUT_LOGGER.log_camera_look("RightStick", x, y, self.get_yaw(), false);
+        }
     }
 
     #[inline]
