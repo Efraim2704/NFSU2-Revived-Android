@@ -388,11 +388,6 @@ public final class GameActivity extends NativeActivity {
                 getWindow().setDecorFitsSystemWindows(false);
             }
         } catch (Throwable ignored) {}
-        try {
-            java.io.File ext = getExternalFilesDir(null);
-            String logBase = ext != null ? ext.getAbsolutePath() : getFilesDir().getAbsolutePath();
-            nativeInputLogInit(logBase);
-        } catch (Throwable ignored) {}
         applyDisplayRefreshRate();
         Intent launch = getIntent();
         float distVal = 450.0f;
@@ -689,12 +684,7 @@ public final class GameActivity extends NativeActivity {
             if(diagnosticOverlay!=null)diagnosticOverlay.hide();
         }
         if(focused){
-            try {
-            java.io.File ext = getExternalFilesDir(null);
-            String logBase = ext != null ? ext.getAbsolutePath() : getFilesDir().getAbsolutePath();
-            nativeInputLogInit(logBase);
-        } catch (Throwable ignored) {}
-        applyDisplayRefreshRate();
+            applyDisplayRefreshRate();
             if(Build.VERSION.SDK_INT>=30){
                 getWindow().setDecorFitsSystemWindows(false);
                 android.view.WindowInsetsController insets=getWindow().getInsetsController();

@@ -357,7 +357,20 @@ public final class InputLog {
                 }
             }
 
-            // Sync copy to /sdcard/NFSU2/input_log.txt and /sdcard/nfsu2/input_log.txt
+            // 1. Sync copy to active game root directory (e.g. /sdcard/nfsu2 or /sdcard/NFSU2)
+            try {
+                File gameDir = LauncherActivity.gameRoot();
+                if (gameDir != null && (gameDir.isDirectory() || gameDir.mkdirs())) {
+                    File gameFile = new File(gameDir, "input_log.txt");
+                    try (FileWriter writer = new FileWriter(gameFile, true)) {
+                        writer.write(entry);
+                        writer.write("\n");
+                        writer.flush();
+                    }
+                }
+            } catch (Throwable ignored) {}
+
+            // 2. Sync copy to both /sdcard/NFSU2/input_log.txt and /sdcard/nfsu2/input_log.txt
             for (String folder : new String[]{"NFSU2", "nfsu2"}) {
                 try {
                     File sdcardDir = new File(Environment.getExternalStorageDirectory(), folder);
@@ -389,6 +402,15 @@ public final class InputLog {
 
     public static String getFullLogText(Context ctx) {
         File file = getPrimaryLogFile(ctx);
+        if (file == null || !file.exists()) {
+            try {
+                File gameDir = LauncherActivity.gameRoot();
+                if (gameDir != null) {
+                    File alt = new File(gameDir, "input_log.txt");
+                    if (alt.exists()) file = alt;
+                }
+            } catch (Throwable ignored) {}
+        }
         if (file == null || !file.exists()) {
             for (String folder : new String[]{"NFSU2", "nfsu2"}) {
                 File alt = new File(new File(Environment.getExternalStorageDirectory(), folder), "input_log.txt");
@@ -430,6 +452,13 @@ public final class InputLog {
         if (file != null && file.exists()) {
             file.delete();
         }
+        try {
+            File gameDir = LauncherActivity.gameRoot();
+            if (gameDir != null) {
+                File iLog = new File(gameDir, "input_log.txt");
+                if (iLog.exists()) iLog.delete();
+            }
+        } catch (Throwable ignored) {}
         for (String folder : new String[]{"NFSU2", "nfsu2"}) {
             try {
                 File sdcardDir = new File(Environment.getExternalStorageDirectory(), folder);
