@@ -52,6 +52,9 @@ public final class GameOptions {
             new Option(MINIMAP, "Minimap", "top",
                     new String[] {"top", "bottom"},
                     new String[] {"Top left", "Bottom left (original)"}),
+            new Option(SPEEDOMETER, "Speedometer Position", "bottom",
+                    new String[] {"bottom", "raised", "middle", "brake"},
+                    new String[] {"Bottom Right (original)", "Raised · right side, mid height", "Middle · bottom center", "Beside Brake · left of the pedals"}),
             new Option(PAD_LAYOUT, "Gamepad Layout", "port",
                     new String[] {"port", "console"},
                     new String[] {"Default Xbox", "PS2 style"}),
@@ -71,9 +74,10 @@ public final class GameOptions {
         return null;
     }
 
-    /** Speedometer for nativeSpeedometerPosition: 0 bottom right (original). */
+    /** Speedometer for nativeSpeedometerPosition: 0 bottom right (original), 1 raised, 2 bottom center, 3 beside the brake pedal. */
     static int speedometerPosition(Context context) {
-        return 0;
+        String position = get(context, SPEEDOMETER);
+        return "brake".equals(position) ? 3 : "middle".equals(position) ? 2 : "raised".equals(position) ? 1 : 0;
     }
 
     /**

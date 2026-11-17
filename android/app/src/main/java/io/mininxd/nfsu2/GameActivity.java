@@ -301,7 +301,7 @@ public final class GameActivity extends NativeActivity {
         if (hudForGamepad != null && hudForGamepad == gamepad) return;
         hudForGamepad = gamepad;
         nativeSpeedometerPosition(gamepad ? 0 : speedometerPosition);
-        nativeMinimapTop(minimapTop);
+        nativeMinimapTop(minimapTop && !gamepad);
     }
     private static void nativeBackBuffers(int count) { com.nfsu2.androidevolved.GameActivity.nativeBackBuffers(count); }
     private static void nativeCpuTextures(boolean enabled) { com.nfsu2.androidevolved.GameActivity.nativeCpuTextures(enabled); }
